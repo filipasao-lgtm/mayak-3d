@@ -940,7 +940,7 @@ export default function App() {
   const [showInitialGlow, setShowInitialGlow] = useState(false);
   const [volume, setVolume] = useState(0.7); // Volume state (0 to 1)
   const [previousVolume, setPreviousVolume] = useState(0.7); // Store volume before mute
-  const [theme, setTheme] = useState('day');
+  const [theme, setTheme] = useState('night');
   const audioRef = useRef();
   const audioAnalyzerRef = useRef(null);
   const fileInputRef = useRef(null);
