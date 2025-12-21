@@ -237,7 +237,7 @@
   background: transparent;
   border: 1px solid var(--pause-border);
   color: var(--pause-text);
-  box-shadow: none;
+  box-shadow: 0 0 0 1px var(--pause-border);
 }
 
 .ui-btn.playing:hover:not(:disabled) {
