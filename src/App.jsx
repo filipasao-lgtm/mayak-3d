@@ -44,12 +44,21 @@ const CAMERA_TARGET_Y = 0.4; // Final camera Y position after intro (higher = sc
 const CAMERA_TARGET_Z = 4.5; // Final camera Z position after intro (lower = closer)
 const SCENE_OFFSET_Y = -.4; // Move entire scene up/down (positive = down, negative = up)
 const CAMERA_FOV = 45; // Field of view (lower = more zoomed in)
-const FOG_COLOR = '#1a1a1a'; // Fog color to blend with CSS background
 const FOG_NEAR = 2; // Fog start distance
-const FOG_FAR = 20; // Fog end distance (full fog)
-const SHADOW_SCALE = 40; // Shadow size (larger = bigger shadow area)
+const FOG_FAR = 60; // Fog end distance (full fog) — pushed 3x farther to reduce intensity
+const THEME_CONFIG = {
+  day: {
+    fogColor: '#d6d9e0',
+    backdropColor: '#d6d9e0',
+  },
+  night: {
+    fogColor: '#14151a',
+    backdropColor: '#14151a',
+  },
+};
+const SHADOW_SCALE = 20; // Shadow size (larger = bigger shadow area) — halved
 const SHADOW_BLUR = 1; // Shadow blur amount (higher = softer edges)
-const SHADOW_OPACITY = 1; // Shadow darkness (0-1)
+const SHADOW_OPACITY = 0.5; // Shadow darkness (0-1) — reduced by half
 const BLOOM_INTENSITY = .1;
 const BLOOM_RADIUS = .2;
 const BLOOM_LUMINANCE_THRESHOLD = 0.08;
@@ -204,7 +213,7 @@ class AudioAnalyzer {
   }
 }
 
-function StudioBackground() {
+function StudioBackground({ color }) {
   return (
     <Backdrop
       receiveShadow
@@ -213,7 +222,7 @@ function StudioBackground() {
       scale={[50, 30, 10]}
       position={[0, -0.1, -10]}
     >
-      <meshStandardMaterial color="#1a1a1a" roughness={1} transparent opacity={0} />
+      <meshStandardMaterial color={color} roughness={1} transparent opacity={0} />
     </Backdrop>
   );
 }
@@ -931,10 +940,19 @@ export default function App() {
   const [showInitialGlow, setShowInitialGlow] = useState(false);
   const [volume, setVolume] = useState(0.7); // Volume state (0 to 1)
   const [previousVolume, setPreviousVolume] = useState(0.7); // Store volume before mute
+  const [theme, setTheme] = useState('day');
   const audioRef = useRef();
   const audioAnalyzerRef = useRef(null);
   const fileInputRef = useRef(null);
   const mayakRef = useRef(null);
+
+  const themeConfig = THEME_CONFIG[theme] || THEME_CONFIG.day;
+
+  useEffect(() => {
+    const cls = theme === 'night' ? 'theme-night' : 'theme-day';
+    document.body.classList.remove('theme-day', 'theme-night');
+    document.body.classList.add(cls);
+  }, [theme]);
 
   // Clean up audio URL on unmount
   useEffect(() => {
@@ -1195,7 +1213,7 @@ export default function App() {
       <Canvas shadows camera={{ position: CAMERA_POSITION, fov: CAMERA_FOV }}>
         
         {/* Fog to blend 3D scene with CSS background */}
-        <fog attach="fog" args={[FOG_COLOR, FOG_NEAR, FOG_FAR]} />
+        <fog attach="fog" args={[themeConfig.fogColor, FOG_NEAR, FOG_FAR]} />
 
         <ambientLight intensity={AMBIENT_INTENSITY} />
         <spotLight
@@ -1233,7 +1251,7 @@ export default function App() {
         </EffectComposer>
 
         {/* 3. ADD THIS LINE HERE (This creates the curved wall) */}
-        <StudioBackground />
+        <StudioBackground color={themeConfig.backdropColor} />
 
         <OrbitControls makeDefault enabled={introFinished} minPolarAngle={0} maxPolarAngle={Math.PI / 2} />
 
@@ -1266,6 +1284,17 @@ export default function App() {
 
       {/* UI Overlay */}
       <div className="ui-overlay">
+        <div className="theme-toggle" title="Toggle day/night theme">
+          <button
+            className={`theme-switch ${theme}`}
+            onClick={() => setTheme(theme === 'day' ? 'night' : 'day')}
+          >
+            <span className="theme-switch-text">{theme === 'day' ? 'Day' : 'Night'}</span>
+            <span className="theme-switch-track">
+              <span className="theme-switch-knob" />
+            </span>
+          </button>
+        </div>
         <div className="hero-title">Маяк МП 140 С</div>
         <div className="controls-container">
           <div className="controls-bar">
