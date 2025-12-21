@@ -9,6 +9,58 @@
   height: 100vh;
 }
 
+.loading-screen {
+  position: fixed;
+  inset: 0;
+  background: var(--bg-base);
+  background: radial-gradient(120% 120% at 50% 20%, var(--bg-grad1a), var(--bg-grad1b)),
+              radial-gradient(100% 80% at 50% 80%, var(--bg-grad2a), var(--bg-grad2b));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeOut 0.6s ease-out 2.3s forwards;
+}
+
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+
+.loading-spinner {
+  width: 60px;
+  height: 60px;
+  border: 3px solid transparent;
+  border-top-color: var(--text-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  opacity: 0.7;
+}
+
+.loading-text {
+  font-size: 18px;
+  font-weight: 300;
+  letter-spacing: 0.15em;
+  color: var(--text-primary);
+  opacity: 0.7;
+  text-transform: uppercase;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fadeOut {
+  to {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
 .ui-overlay {
   position: fixed;
   inset: 0;

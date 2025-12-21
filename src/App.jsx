@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, forwardRef, useImperativeHandle, useMemo } from 'react';
+import React, { useRef, useEffect, useState, forwardRef, useImperativeHandle, useMemo, Suspense } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useGLTF, useAnimations, Environment, OrbitControls, ContactShadows, Center, Backdrop } from '@react-three/drei';
 import { EffectComposer, Bloom } from '@react-three/postprocessing';
@@ -932,6 +932,7 @@ const MayakModel = forwardRef(function MayakModel({ audioAnalyzer, isPlayingAudi
 });
 
 export default function App() {
+  const [loading, setLoading] = useState(true);
   const [introFinished, setIntroFinished] = useState(false);
   const [audioUrl, setAudioUrl] = useState(null);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
@@ -962,6 +963,14 @@ export default function App() {
   const contactShadowScale = useMemo(() => (isPortrait ? SHADOW_SCALE * 0.85 : SHADOW_SCALE), [isPortrait]);
 
   const themeConfig = THEME_CONFIG[theme] || THEME_CONFIG.day;
+
+  // Minimum loading delay to ensure smooth start
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 2500); // 2.5 second minimum loading time
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     const cls = theme === 'night' ? 'theme-night' : 'theme-day';
@@ -1244,6 +1253,7 @@ export default function App() {
 
         <Environment preset="studio" environmentIntensity={ENVIRONMENT_INTENSITY} />
 
+        <Suspense fallback={null}>
         <MayakModel 
           ref={mayakRef}
           audioAnalyzer={audioAnalyzerRef.current} 
@@ -1262,6 +1272,7 @@ export default function App() {
             }
           }}
         />
+        </Suspense>
 
         {/* Post-processing for bloom on emissive LEDs */}
         <EffectComposer multisampling={0}>
@@ -1273,7 +1284,7 @@ export default function App() {
 
         <OrbitControls makeDefault enabled={introFinished} minPolarAngle={0} maxPolarAngle={Math.PI / 2} />
 
-        {!introFinished && (
+        {!loading && !introFinished && (
           <Intro onFinish={() => setIntroFinished(true)} />
         )}
 
@@ -1292,6 +1303,16 @@ export default function App() {
       </Canvas>
 
       </div>
+
+      {/* Loading Screen */}
+      {loading && (
+        <div className="loading-screen">
+          <div className="loading-content">
+            <div className="loading-spinner"></div>
+            <div className="loading-text">Loading MAYAK...</div>
+          </div>
+        </div>
+      )}
 
       {/* Hidden inputs */}
       <input
