@@ -46,7 +46,7 @@ const SCENE_OFFSET_Y = -.4; // Move entire scene up/down (positive = down, negat
 const CAMERA_FOV = 45; // Field of view (lower = more zoomed in)
 const FOG_COLOR = '#1a1a1a'; // Fog color to blend with CSS background
 const FOG_NEAR = 2; // Fog start distance
-const FOG_FAR = 1; // Fog end distance (full fog)
+const FOG_FAR = 20; // Fog end distance (full fog)
 const SHADOW_SCALE = 40; // Shadow size (larger = bigger shadow area)
 const SHADOW_BLUR = 1; // Shadow blur amount (higher = softer edges)
 const SHADOW_OPACITY = 1; // Shadow darkness (0-1)
@@ -70,8 +70,31 @@ const BUTTON_LED_MAP = {
   [ANIMATION_NAMES.PROG2n]: 'LED_EDIT',
 };
 
+const LED_MESH_NAMES = MESH_NAMES.filter((n) => (
+  n.startsWith('LED') || n.startsWith('VHD_LED') || n.includes('VHD_BAR')
+));
+
+const isGlassMesh = (meshName, materialName) => {
+  const nameLower = meshName.toLowerCase();
+  return materialName === 'Mat_Glass' || 
+         meshName === 'Glass_Screen' || 
+         meshName === 'Cassette-glass' ||
+         nameLower.includes('glass');
+};
+
+const applyGlassMaterialProperties = (material) => {
+  if (!material) return;
+  if (material.color) material.color.set('#000000');
+  material.transparent = true;
+  material.opacity = 0.8;
+  material.metalness = 0.1;
+  material.roughness = 0.1;
+  material.envMapIntensity = 1.5;
+  material.needsUpdate = true;
+};
+
 // Exported list of mesh names (populated at runtime after GLB loads)
-export let AVAILABLE_MESH_NAMES = [];
+export const AVAILABLE_MESH_NAMES = [];
 const SPOT_INTENSITY = 0.1;
 const ENVIRONMENT_INTENSITY = 0.1;
 
@@ -99,14 +122,12 @@ class AudioAnalyzer {
 
   init() {
     if (this.audioContext) {
-      console.log('Audio analyzer already initialized');
       return true; // already initialized
     }
     
     try {
       // Create AudioContext first
       this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      console.log('AudioContext created, state:', this.audioContext.state);
       
       // Check if audio element is ready
       if (!this.audioElement || this.audioElement.readyState < 2) {
@@ -116,7 +137,6 @@ class AudioAnalyzer {
       
       // Create source from audio element
       this.source = this.audioContext.createMediaElementSource(this.audioElement);
-      console.log('MediaElementSource created');
       
       // Create stereo splitter
       this.splitter = this.audioContext.createChannelSplitter(2);
@@ -139,8 +159,6 @@ class AudioAnalyzer {
       
       // Also connect to destination for audio playback
       this.source.connect(this.audioContext.destination);
-      
-      console.log('Audio analyzer fully wired up');
       return true;
     } catch (err) {
       console.error('Failed to initialize audio analyzer:', err);
@@ -244,36 +262,9 @@ const MayakModel = forwardRef(function MayakModel({ audioAnalyzer, isPlayingAudi
   const tapeWheelsRef = useRef({ left: null, right: null });
   const wheelRotationRef = useRef({ rotating: false, speed: 3 }); // 3 radians per second
 
-
   // LED mesh names to toggle emissive on power (sourced from discovered mesh names)
-  const LED_MESH_NAMES = MESH_NAMES.filter((n) => (
-    n.startsWith('LED') || n.startsWith('VHD_LED') || n.includes('VHD_BAR')
-  ));
   // If you prefer an explicit list, replace the above with: ['LED_PLAY','VHD_LED_L','VHD_LED_R','VHD_BAR_R','VHD_BAR_L','VHD_BAR_numbers'];
   const ledMeshesRef = useRef([]);
-
-  const allMeshNamesRef = useRef([]);
-
-  // Helper function to check if a mesh is a glass material
-  const isGlassMesh = (meshName, materialName) => {
-    const nameLower = meshName.toLowerCase();
-    return materialName === 'Mat_Glass' || 
-           meshName === 'Glass_Screen' || 
-           meshName === 'Cassette-glass' ||
-           nameLower.includes('glass');
-  };
-
-  // Helper function to apply glass material properties
-  const applyGlassMaterialProperties = (material) => {
-    if (!material) return;
-    if (material.color) material.color.set('#000000');
-    material.transparent = true;
-    material.opacity = 0.8;
-    material.metalness = 0.1;
-    material.roughness = 0.1;
-    material.envMapIntensity = 1.5;
-    material.needsUpdate = true;
-  };
 
   // Sync volume knob animation with volume level
   useEffect(() => {
@@ -329,43 +320,21 @@ const MayakModel = forwardRef(function MayakModel({ audioAnalyzer, isPlayingAudi
       // Use exact match for VFD mask objects
       if (child.name === 'VHD_MASK_L') {
         vfdMasksRef.current.left = child;
-        console.log('Found VHD_MASK_L:', {
-          type: child.type,
-          isMesh: child.isMesh,
-          isGroup: child.isGroup,
-          scale: child.scale,
-          children: child.children.map(c => ({ name: c.name, type: c.type }))
-        });
       }
       if (child.name === 'VHD_MASK_R') {
         vfdMasksRef.current.right = child;
-        console.log('Found VHD_MASK_R:', {
-          type: child.type,
-          isMesh: child.isMesh,
-          isGroup: child.isGroup,
-          scale: child.scale,
-          children: child.children.map(c => ({ name: c.name, type: c.type }))
-        });
       }
       
       // Find tape wheel meshes
       if (child.name === 'Tape_wheele_L') {
         tapeWheelsRef.current.left = child;
-        console.log('Found Tape_wheele_L');
       }
       if (child.name === 'Tape_wheele_R') {
         tapeWheelsRef.current.right = child;
-        console.log('Found Tape_wheele_R');
       }
     });
 
-    // store list for internal use
-    allMeshNamesRef.current = allNames;
-    // expose for quick console inspection and importers
-    console.log('All mesh names:', allNames);
-    console.log('VFD Masks collected:', vfdMasksRef.current);
-    window.MAYAK_MESH_NAMES = allNames;
-    AVAILABLE_MESH_NAMES = allNames;
+    AVAILABLE_MESH_NAMES.splice(0, AVAILABLE_MESH_NAMES.length, ...allNames);
   }, [scene]);
 
   const playSequence = () => {

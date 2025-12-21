@@ -3,16 +3,12 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "main": "electron-main.js",
   "homepage": "./",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview",
-    "start": "npm run build && node server.js",
-    "electron-dev": "concurrently \"npm run dev\" \"wait-on http://localhost:5173 && electron .\"",
-    "electron-build": "npm run build && electron-builder"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",
@@ -22,48 +18,19 @@
     "postprocessing": "^6.38.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "three": "^0.182.0",
-    "electron-is-dev": "^2.0.0"
+    "three": "^0.182.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.1",
-    "concurrently": "^8.2.2",
-    "electron": "^39.2.7",
-    "electron-builder": "^26.0.12",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.5.0",
-    "vite": "npm:rolldown-vite@7.2.5",
-    "wait-on": "^7.2.0"
-  },
-  "build": {
-    "appId": "com.mayak3d.app",
-    "productName": "Маяк МП 140 С",
-    "files": [
-      "dist/**/*",
-      "electron-main.js",
-      "preload.js",
-      "node_modules/**/*"
-    ],
-    "win": {
-      "target": [
-        "portable"
-      ],
-      "icon": "public/mayak-logo.ico",
-      "forceCodeSigning": false,
-      "signAndEditExecutable": false
-    },
-    "portable": {
-      "artifactName": "${productName}-${version}.exe"
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true
-    }
+    "terser": "^5.44.1",
+    "vite": "npm:rolldown-vite@7.2.5"
   },
   "overrides": {
     "vite": "npm:rolldown-vite@7.2.5"
