@@ -93,8 +93,9 @@ const applyGlassMaterialProperties = (material) => {
   material.needsUpdate = true;
 };
 
-// Exported list of mesh names (populated at runtime after GLB loads)
-export const AVAILABLE_MESH_NAMES = [];
+// Mesh names discovered at runtime after GLB loads (kept local to avoid HMR warnings)
+const AVAILABLE_MESH_NAMES = [];
+const DEBUG_AUDIO = false;
 const SPOT_INTENSITY = 0.1;
 const ENVIRONMENT_INTENSITY = 0.1;
 
@@ -675,24 +676,24 @@ const MayakModel = forwardRef(function MayakModel({ audioAnalyzer, isPlayingAudi
     const leftAdjusted = left * volume;
     const rightAdjusted = right * volume;
     
-    // Debug logging every 60 frames
-    frameCountRef.current++;
-    if (frameCountRef.current % 60 === 0) {
-      // Sample the raw data arrays for debugging
-      const sampleL = audioAnalyzer.dataArrayL ? Array.from(audioAnalyzer.dataArrayL.slice(0, 10)) : [];
-      const sampleR = audioAnalyzer.dataArrayR ? Array.from(audioAnalyzer.dataArrayR.slice(0, 10)) : [];
-      
-      console.log('Audio data:', { 
-        left: left.toFixed(4), 
-        right: right.toFixed(4),
-        volume: volume.toFixed(2),
-        leftAdjusted: leftAdjusted.toFixed(4),
-        rightAdjusted: rightAdjusted.toFixed(4),
-        sampleL,
-        sampleR,
-        contextState: audioAnalyzer.audioContext?.state,
-        hasMasks: !!leftMask && !!rightMask
-      });
+    if (DEBUG_AUDIO) {
+      // Debug logging every 60 frames
+      frameCountRef.current++;
+      if (frameCountRef.current % 60 === 0) {
+        const sampleL = audioAnalyzer.dataArrayL ? Array.from(audioAnalyzer.dataArrayL.slice(0, 10)) : [];
+        const sampleR = audioAnalyzer.dataArrayR ? Array.from(audioAnalyzer.dataArrayR.slice(0, 10)) : [];
+        console.log('Audio data:', {
+          left: left.toFixed(4),
+          right: right.toFixed(4),
+          volume: volume.toFixed(2),
+          leftAdjusted: leftAdjusted.toFixed(4),
+          rightAdjusted: rightAdjusted.toFixed(4),
+          sampleL,
+          sampleR,
+          contextState: audioAnalyzer.audioContext?.state,
+          hasMasks: !!leftMask && !!rightMask
+        });
+      }
     }
     
     if (leftMask) {
@@ -1105,6 +1106,12 @@ export default function App() {
     
     try {
       setShowInitialGlow(false); // Hide initial glow once music is selected
+
+      // Revoke previous object URL to avoid leaks before creating a new one
+      if (audioUrl) {
+        URL.revokeObjectURL(audioUrl);
+      }
+
       const url = URL.createObjectURL(file);
       setAudioUrl(url);
       
