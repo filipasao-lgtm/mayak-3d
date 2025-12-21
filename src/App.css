@@ -46,8 +46,8 @@
   height: 40px;
   padding: 5px;
   border-radius: 999px;
-  background: var(--play-bg);
-  border: 1px solid var(--play-border);
+  background: var(--switch-track);
+  border: 1px solid var(--switch-track);
   box-shadow: none;
   position: relative;
   display: inline-flex;
@@ -61,7 +61,7 @@
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  background: var(--play-text);
+  background: var(--switch-knob);
   box-shadow: 0 6px 16px rgba(0,0,0,0.12);
   left: 5px;
   transition: transform 200ms ease, background 200ms ease, box-shadow 200ms ease;

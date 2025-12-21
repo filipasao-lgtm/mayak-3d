@@ -21,6 +21,7 @@
   --slider-thumb-hover: #1f2228;
   --switch-track: #333333;
   --switch-track-shadow: inset 0 2px 6px rgba(0,0,0,0.25), 0 4px 12px rgba(0,0,0,0.35);
+  --switch-knob: #f7f7fb;
   --play-bg: #111114;
   --play-bg-hover: #1a1b1f;
   --play-text: #f7f7fb;
@@ -79,6 +80,7 @@
   --slider-thumb-hover: #e6e7eb;
   --switch-track: #cccccc;
   --switch-track-shadow: inset 0 2px 6px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.16);
+  --switch-knob: #0f0f12;
   --pause-hover-bg: rgba(255,255,255,0.08);
   --play-bg: rgba(255,255,255,0.9);
   --play-bg-hover: rgba(255,255,255,1);
