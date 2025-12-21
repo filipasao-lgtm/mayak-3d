@@ -7,7 +7,7 @@
 .canvas-stage {
   width: 100vw;
   height: 100vh;
-  animation: canvasFadeIn 0.5s ease-out 2s both;
+  animation: canvasFadeIn 0.8s ease-out 1.4s both;
 }
 
 @keyframes canvasFadeIn {
@@ -29,7 +29,7 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  animation: fadeOut 0.3s ease-out 1.7s forwards;
+  animation: fadeOut 0.9s ease-out 1.1s forwards;
 }
 
 .loading-dots {

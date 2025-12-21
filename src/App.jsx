@@ -968,7 +968,7 @@ export default function App() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setLoading(false);
-    }, 2000); // 2 second minimum loading time
+    }, 1700); // 1.7 second minimum loading time
     return () => clearTimeout(timer);
   }, []);
 
