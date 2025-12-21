@@ -1,3 +1,14 @@
+.canvas-shell {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+}
+
+.canvas-stage {
+  width: 100vw;
+  height: 100vh;
+}
+
 .ui-overlay {
   position: fixed;
   inset: 0;
@@ -376,6 +387,10 @@
 }
 
 @media (max-width: 768px) {
+  .canvas-stage {
+    transform: translateY(-100px);
+  }
+
   .ui-overlay {
     padding: 20px 8px 24px;
   }

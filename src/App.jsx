@@ -1223,7 +1223,8 @@ export default function App() {
 
   return (
     // 1. Remove the background color from the div so it doesn't conflict
-    <div style={{ width: '100vw', height: '100vh' }}>
+    <div className="canvas-shell">
+      <div className="canvas-stage">
       
       <Canvas shadows camera={{ position: CAMERA_POSITION, fov: CAMERA_FOV }}>
         
@@ -1289,6 +1290,8 @@ export default function App() {
         />
         
       </Canvas>
+
+      </div>
 
       {/* Hidden inputs */}
       <input
