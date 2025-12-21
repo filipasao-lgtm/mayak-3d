@@ -7,7 +7,8 @@
 .canvas-stage {
   width: 100vw;
   height: 100vh;
-  animation: canvasFadeIn 0.8s ease-out 1.4s both;
+  opacity: 0;
+  animation: canvasFadeIn 1s ease-out 0s forwards;
 }
 
 @keyframes canvasFadeIn {
