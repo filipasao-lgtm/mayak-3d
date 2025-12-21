@@ -388,7 +388,7 @@
 
 @media (max-width: 768px) {
   .canvas-stage {
-    transform: translateY(-100px);
+    transform: translateY(-70px);
   }
 
   .ui-overlay {
