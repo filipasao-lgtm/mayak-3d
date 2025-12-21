@@ -220,6 +220,14 @@
 }
 
 .ui-btn.primary {
+  background: transparent;
+  border: 1.5px solid var(--text-primary);
+  color: var(--text-primary);
+}
+
+.ui-btn.primary:hover:not(:disabled) {
+  background: var(--button-bg);
+  box-shadow: none;
 }
 
 .ui-btn.ghost {
@@ -234,14 +242,14 @@
 }
 
 .ui-btn.playing {
-  background: transparent;
-  border: 1.5px solid var(--pause-text);
+  background: var(--pause-bg);
+  border: 1px solid var(--pause-text);
   color: var(--pause-text);
-  box-shadow: 0 0 0 1px var(--pause-text);
+  box-shadow: none;
 }
 
 .ui-btn.playing:hover:not(:disabled) {
-  background: var(--pause-hover-bg);
+  background: var(--pause-bg-hover);
 }
 
 

@@ -24,6 +24,11 @@
   --play-bg: #111114;
   --play-bg-hover: #1a1b1f;
   --play-text: #f7f7fb;
+  --play-border: #111114;
+  --pause-text: #0d0d0d;
+  --pause-border: #0d0d0d;
+  --pause-bg: rgba(0,0,0,0.06);
+  --pause-bg-hover: rgba(0,0,0,0.1);
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -50,6 +55,11 @@
   --play-bg: #111114;
   --play-bg-hover: #1a1b1f;
   --play-text: #f7f7fb;
+  --play-border: #111114;
+  --pause-text: #0d0d0d;
+  --pause-border: #0d0d0d;
+  --pause-bg: rgba(0,0,0,0.06);
+  --pause-bg-hover: rgba(0,0,0,0.1);
 }
 
 .theme-night {
@@ -73,6 +83,11 @@
   --play-bg: rgba(255,255,255,0.9);
   --play-bg-hover: rgba(255,255,255,1);
   --play-text: #111114;
+  --play-border: rgba(255,255,255,0.9);
+  --pause-text: #f5f5f7;
+  --pause-border: #f5f5f7;
+  --pause-bg: rgba(255,255,255,0.08);
+  --pause-bg-hover: rgba(255,255,255,0.12);
 }
 
 * {
