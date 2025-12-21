@@ -45,13 +45,14 @@
   width: 62px;
   height: 30px;
   border-radius: 999px;
-  background: var(--switch-track);
+  background: var(--play-bg);
+  border: 1px solid var(--play-border);
   box-shadow: none;
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: background 200ms ease, box-shadow 200ms ease;
+  transition: background 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
 }
 
 .theme-switch-knob {
@@ -59,16 +60,16 @@
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: #f7f7fb;
-  box-shadow: none;
+  background: var(--play-text);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
   left: 3px;
   transition: transform 200ms ease, background 200ms ease, box-shadow 200ms ease;
 }
 
 .theme-switch.night .theme-switch-knob {
   transform: translateX(32px);
-  background: #2c2d32;
-  box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+  background: var(--play-text);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
 }
 
 .theme-switch-text {
@@ -223,7 +224,7 @@
 
 .ui-btn.ghost {
   background: var(--play-bg);
-  border: 1px solid var(--play-bg);
+  border: 1px solid var(--play-border);
   color: var(--play-text);
 }
 
@@ -234,8 +235,8 @@
 
 .ui-btn.playing {
   background: transparent;
-  border: 1px solid var(--text-primary);
-  color: var(--text-primary);
+  border: 1px solid var(--pause-border);
+  color: var(--pause-text);
   box-shadow: none;
 }
 
