@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, forwardRef, useImperativeHandle } from 'react';
+import React, { useRef, useEffect, useState, forwardRef, useImperativeHandle, useMemo } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useGLTF, useAnimations, Environment, OrbitControls, ContactShadows, Center, Backdrop } from '@react-three/drei';
 import { EffectComposer, Bloom } from '@react-three/postprocessing';
@@ -254,7 +254,7 @@ function Intro({ onFinish }) {
   return null;
 }
 
-const MayakModel = forwardRef(function MayakModel({ audioAnalyzer, isPlayingAudio, onPlayButtonClick, onSelectSongClick, volume, onPowerChange, onTapeUnload, onCasseteLoaded }, ref) {
+const MayakModel = forwardRef(function MayakModel({ audioAnalyzer, isPlayingAudio, onPlayButtonClick, onSelectSongClick, volume, onPowerChange, onTapeUnload, onCasseteLoaded, modelScale = MODEL_SCALE, sceneOffsetY = SCENE_OFFSET_Y }, ref) {
   const group = useRef();
   const { scene, animations } = useGLTF('./mayak.glb');
   const { actions, mixer } = useAnimations(animations, group);
@@ -870,12 +870,12 @@ const MayakModel = forwardRef(function MayakModel({ audioAnalyzer, isPlayingAudi
   }));
 
   return (
-    <group ref={group} position={[0, SCENE_OFFSET_Y, 0]} dispose={null}>
+    <group ref={group} position={[0, sceneOffsetY, 0]} dispose={null}>
       {/* Center and Scale the model */}
       <Center top>
         <primitive 
           object={scene} 
-          scale={MODEL_SCALE}
+          scale={modelScale}
           onClick={(e) => {
             e.stopPropagation();
             const name = e.object.name || '';
@@ -941,10 +941,25 @@ export default function App() {
   const [volume, setVolume] = useState(0.7); // Volume state (0 to 1)
   const [previousVolume, setPreviousVolume] = useState(0.7); // Store volume before mute
   const [theme, setTheme] = useState('night');
+  const [viewportSize, setViewportSize] = useState(() => ({
+    width: typeof window !== 'undefined' ? window.innerWidth : 1024,
+    height: typeof window !== 'undefined' ? window.innerHeight : 768,
+  }));
   const audioRef = useRef();
   const audioAnalyzerRef = useRef(null);
   const fileInputRef = useRef(null);
   const mayakRef = useRef(null);
+
+  useEffect(() => {
+    const handleResize = () => setViewportSize({ width: window.innerWidth, height: window.innerHeight });
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const isPortrait = viewportSize.width < viewportSize.height;
+  const modelScale = useMemo(() => (isPortrait ? MODEL_SCALE * 0.5 : MODEL_SCALE), [isPortrait]);
+  const sceneOffsetY = useMemo(() => (isPortrait ? SCENE_OFFSET_Y - 0.05 : SCENE_OFFSET_Y), [isPortrait]);
+  const contactShadowScale = useMemo(() => (isPortrait ? SHADOW_SCALE * 0.85 : SHADOW_SCALE), [isPortrait]);
 
   const themeConfig = THEME_CONFIG[theme] || THEME_CONFIG.day;
 
@@ -1237,6 +1252,8 @@ export default function App() {
           onPowerChange={handlePowerChange}
           onTapeUnload={handleTapeUnload}
           onCasseteLoaded={handleCasseteLoaded}
+          modelScale={modelScale}
+          sceneOffsetY={sceneOffsetY}
           onPlayButtonClick={() => {
             if (audioUrl) {
               console.log('Play button clicked, starting audio');
@@ -1262,9 +1279,9 @@ export default function App() {
         {/* Optional: You can remove ContactShadows now because the Background catches real shadows. 
             Or keep it if you want extra darkness under the object. */}
         <ContactShadows 
-          position={[0, SCENE_OFFSET_Y, 0]}
+          position={[0, sceneOffsetY, 0]}
           resolution={1024} 
-          scale={SHADOW_SCALE} 
+          scale={contactShadowScale} 
           blur={SHADOW_BLUR} 
           opacity={SHADOW_OPACITY}
           far={10}
