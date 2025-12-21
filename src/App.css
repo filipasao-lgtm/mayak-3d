@@ -222,14 +222,14 @@
 }
 
 .ui-btn.ghost {
-  background: #111114;
-  border: 1px solid #111114;
-  color: #f7f7fb;
+  background: var(--play-bg);
+  border: 1px solid var(--play-bg);
+  color: var(--play-text);
 }
 
 .ui-btn.ghost:hover:not(:disabled) {
-  background: #1a1b1f;
-  border-color: #1a1b1f;
+  background: var(--play-bg-hover);
+  border-color: var(--play-bg-hover);
 }
 
 .ui-btn.playing {
