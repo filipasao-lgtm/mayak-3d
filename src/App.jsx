@@ -968,7 +968,7 @@ export default function App() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setLoading(false);
-    }, 2500); // 2.5 second minimum loading time
+    }, 2000); // 2 second minimum loading time
     return () => clearTimeout(timer);
   }, []);
 
@@ -1307,9 +1307,12 @@ export default function App() {
       {/* Loading Screen */}
       {loading && (
         <div className="loading-screen">
-          <div className="loading-content">
-            <div className="loading-spinner"></div>
-            <div className="loading-text">Loading MAYAK...</div>
+          <div className="loading-dots">
+            <div className="dot"></div>
+            <div className="dot"></div>
+            <div className="dot"></div>
+            <div className="dot"></div>
+            <div className="dot"></div>
           </div>
         </div>
       )}
