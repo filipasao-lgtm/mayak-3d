@@ -1,0 +1,29 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
+:root {
+  font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+  line-height: 1.4;
+  font-weight: 300;
+  color: #e7eaed;
+  background-color: #0f1115;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(120% 120% at 50% 20%, rgba(255,255,255,0.08), rgba(15,17,21,0.2)),
+              radial-gradient(100% 80% at 50% 80%, rgba(0,0,0,0.55), #0a0c10);
+  color: #e7eaed;
+}
+
+#root {
+  width: 100vw;
+  height: 100vh;
+}
