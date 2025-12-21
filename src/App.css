@@ -42,8 +42,9 @@
 }
 
 .theme-switch-track {
-  width: 62px;
-  height: 30px;
+  width: 80px;
+  height: 40px;
+  padding: 5px;
   border-radius: 999px;
   background: var(--play-bg);
   border: 1px solid var(--play-border);
@@ -57,17 +58,17 @@
 
 .theme-switch-knob {
   position: absolute;
-  width: 24px;
-  height: 24px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   background: var(--play-text);
   box-shadow: 0 6px 16px rgba(0,0,0,0.12);
-  left: 3px;
+  left: 5px;
   transition: transform 200ms ease, background 200ms ease, box-shadow 200ms ease;
 }
 
 .theme-switch.night .theme-switch-knob {
-  transform: translateX(32px);
+  transform: translateX(40px);
   background: var(--play-text);
   box-shadow: 0 6px 16px rgba(0,0,0,0.12);
 }
