@@ -63,6 +63,11 @@ const BLOOM_INTENSITY = .1;
 const BLOOM_RADIUS = .2;
 const BLOOM_LUMINANCE_THRESHOLD = 0.08;
 const LED_EMISSIVE_INTENSITY_ON = 1.1;
+const LED_EMISSIVE_BOOST_MATERIALS = new Set([
+  'Mat_LED_RECORD',
+  'Mat_LED_FORWARD',
+  'Mat_LED_BACKWARD',
+]);
 const AMBIENT_INTENSITY = 0.31;
 
 // Which LED meshes are powered when power is on
@@ -254,7 +259,7 @@ function Intro({ onFinish }) {
   return null;
 }
 
-const MayakModel = forwardRef(function MayakModel({ audioAnalyzer, isPlayingAudio, onPlayButtonClick, onSelectSongClick, volume, onPowerChange, onTapeUnload, onCasseteLoaded, modelScale = MODEL_SCALE, sceneOffsetY = SCENE_OFFSET_Y }, ref) {
+const MayakModel = forwardRef(function MayakModel({ audioAnalyzer, isPlayingAudio, onPlayButtonClick, onSelectSongClick, onStereoToggle, volume, onPowerChange, onTapeUnload, onCasseteLoaded, modelScale = MODEL_SCALE, sceneOffsetY = SCENE_OFFSET_Y }, ref) {
   const group = useRef();
   const { scene, animations } = useGLTF('./mayak.glb');
   const { actions, mixer } = useAnimations(animations, group);
@@ -275,6 +280,8 @@ const MayakModel = forwardRef(function MayakModel({ audioAnalyzer, isPlayingAudi
   // LED mesh names to toggle emissive on power (sourced from discovered mesh names)
   // If you prefer an explicit list, replace the above with: ['LED_PLAY','VHD_LED_L','VHD_LED_R','VHD_BAR_R','VHD_BAR_L','VHD_BAR_numbers'];
   const ledMeshesRef = useRef([]);
+  const tapeLightMatsRef = useRef([]);
+  const redZoneMatsRef = useRef([]);
 
   // Sync volume knob animation with volume level
   useEffect(() => {
@@ -325,6 +332,44 @@ const MayakModel = forwardRef(function MayakModel({ audioAnalyzer, isPlayingAudi
             }
           }
         }
+
+        // Boost the tape light emissive strength and tie it to power state (5x when on, 0 when off)
+        if (child.name === 'LIGHT-tape') {
+          const mats = Array.isArray(child.material) ? child.material : [child.material];
+          mats.forEach((mat) => {
+            if (!mat) return;
+            const current = typeof mat.emissiveIntensity === 'number' ? mat.emissiveIntensity : 1;
+            mat.userData.baseTapeEmissive = current;
+            mat.emissiveIntensity = isPowerOnRef.current ? current * 5 : 0;
+            mat.toneMapped = false; // keep emissive bright for bloom
+            mat.needsUpdate = true;
+            tapeLightMatsRef.current.push(mat);
+          });
+        }
+
+        // Handle Mat_LED_REDZONE emission (0 when off, 2x when on)
+        const matsAll = Array.isArray(child.material) ? child.material : [child.material];
+        matsAll.forEach((mat) => {
+          if (mat && mat.name === 'Mat_LED_REDZONE') {
+            const current = typeof mat.emissiveIntensity === 'number' ? mat.emissiveIntensity : 1;
+            mat.userData.baseRedZoneEmissive = current;
+            mat.emissiveIntensity = isPowerOnRef.current ? current * 2 : 0;
+            mat.toneMapped = false;
+            mat.needsUpdate = true;
+            redZoneMatsRef.current.push(mat);
+          }
+        });
+
+        // Boost Mat_VFD_GRAD emission 2x
+        const mats = Array.isArray(child.material) ? child.material : [child.material];
+        mats.forEach((mat) => {
+          if (mat && mat.name === 'Mat_VFD_GRAD') {
+            const current = typeof mat.emissiveIntensity === 'number' ? mat.emissiveIntensity : 1;
+            mat.emissiveIntensity = current * 2;
+            mat.toneMapped = false;
+            mat.needsUpdate = true;
+          }
+        });
       }
       
       // Use exact match for VFD mask objects
@@ -346,6 +391,28 @@ const MayakModel = forwardRef(function MayakModel({ audioAnalyzer, isPlayingAudi
 
     AVAILABLE_MESH_NAMES.splice(0, AVAILABLE_MESH_NAMES.length, ...allNames);
   }, [scene]);
+
+  const updateTapeLightIntensity = () => {
+    const mats = tapeLightMatsRef.current || [];
+    mats.forEach((mat) => {
+      if (!mat) return;
+      const base = typeof mat.userData.baseTapeEmissive === 'number' ? mat.userData.baseTapeEmissive : 1;
+      mat.emissiveIntensity = isPowerOnRef.current ? base * 5 : 0;
+      mat.toneMapped = false;
+      mat.needsUpdate = true;
+    });
+  };
+
+  const updateRedZoneIntensity = () => {
+    const mats = redZoneMatsRef.current || [];
+    mats.forEach((mat) => {
+      if (!mat) return;
+      const base = typeof mat.userData.baseRedZoneEmissive === 'number' ? mat.userData.baseRedZoneEmissive : 1;
+      mat.emissiveIntensity = isPowerOnRef.current ? base * 2 : 0;
+      mat.toneMapped = false;
+      mat.needsUpdate = true;
+    });
+  };
 
   const playSequence = () => {
     const clips = [
@@ -495,9 +562,12 @@ const MayakModel = forwardRef(function MayakModel({ audioAnalyzer, isPlayingAudi
 
       mats.forEach((mat) => {
         if (!mat) return;
+        const intensity = LED_EMISSIVE_BOOST_MATERIALS.has(mat.name)
+          ? LED_EMISSIVE_INTENSITY_ON * 3
+          : LED_EMISSIVE_INTENSITY_ON;
         if (on) {
           if (mat.emissive) mat.emissive.set(color);
-          mat.emissiveIntensity = LED_EMISSIVE_INTENSITY_ON;
+          mat.emissiveIntensity = intensity;
           mat.toneMapped = false;
         } else {
           mat.emissiveIntensity = 0;
@@ -568,6 +638,7 @@ const MayakModel = forwardRef(function MayakModel({ audioAnalyzer, isPlayingAudi
         }
         // update LEDs after state change
         updateLEDStates();
+        updateTapeLightIntensity();
       }
     };
 
@@ -594,6 +665,8 @@ const MayakModel = forwardRef(function MayakModel({ audioAnalyzer, isPlayingAudi
   // Re-evaluate LED states when power state changes
   useEffect(() => {
     updateLEDStates();
+    updateTapeLightIntensity();
+    updateRedZoneIntensity();
   }, [isPowerOn]);
 
   // Handle audio pause/play state - trigger slow closure when paused
@@ -809,6 +882,72 @@ const MayakModel = forwardRef(function MayakModel({ audioAnalyzer, isPlayingAudi
     toggleActionForObject('btn_PLAY');
   };
 
+  const triggerStereoButton = () => {
+    toggleActionForObject('btn_STEREO');
+  };
+
+  const resetPlayButton = () => {
+    const clipName = ANIMATION_NAMES.play;
+    const action = actions[clipName];
+    if (!action) return;
+
+    const dir = playing.current.get(clipName);
+    const isPressed = pressed.current.has(clipName);
+
+    if (dir === 'reverse') return;
+
+    action.setLoop(THREE.LoopOnce);
+    action.clampWhenFinished = true;
+    action.enabled = true;
+
+    const clip = action.getClip ? action.getClip() : action._clip;
+    const duration = (clip && clip.duration) ? clip.duration : 1;
+
+    if (dir === 'forward') {
+      pendingReverse.current.add(clipName);
+      return;
+    }
+
+    if (isPressed && !dir) {
+      pressed.current.delete(clipName); // Remove immediately so state is consistent
+      action.time = Math.max(duration - 1e-6, 0);
+      action.timeScale = -1;
+      action.paused = false;
+      action.play();
+      playing.current.set(clipName, 'reverse');
+      updateLEDStates(); // Update LEDs immediately
+    }
+  };
+
+  const pressPlayButton = () => {
+    const clipName = ANIMATION_NAMES.play;
+    const action = actions[clipName];
+    if (!action) return;
+
+    const dir = playing.current.get(clipName);
+    const isPressed = pressed.current.has(clipName);
+
+    // If already pressed or playing forward, nothing to do
+    if (isPressed || dir === 'forward') return;
+
+    // If currently reversing, cancel it and start forward
+    if (dir === 'reverse') {
+      playing.current.delete(clipName);
+    }
+
+    // Start the forward (press) animation
+    action.setLoop(THREE.LoopOnce);
+    action.clampWhenFinished = true;
+    action.enabled = true;
+    action.reset();
+    action.timeScale = 1;
+    action.paused = false;
+    action.play();
+    playing.current.set(clipName, 'forward');
+    pressed.current.add(clipName); // Mark as pressed immediately
+    updateLEDStates();
+  };
+
   const unloadCassette = () => {
     // Notify parent that tape is being unloaded
     console.log('unloadCassette called - calling onTapeUnload');
@@ -861,11 +1000,50 @@ const MayakModel = forwardRef(function MayakModel({ audioAnalyzer, isPlayingAudi
     });
   };
 
+  // Force the stereo button back to its initial (unpressed) state
+  const resetStereoButton = () => {
+    const clipName = ANIMATION_NAMES.STEREO;
+    const action = actions[clipName];
+    if (!action) return;
+
+    const dir = playing.current.get(clipName);
+    const isPressed = pressed.current.has(clipName);
+
+    // If it's already reversing, leave it
+    if (dir === 'reverse') return;
+
+    action.setLoop(THREE.LoopOnce);
+    action.clampWhenFinished = true;
+    action.enabled = true;
+
+    const clip = action.getClip ? action.getClip() : action._clip;
+    const duration = (clip && clip.duration) ? clip.duration : 1;
+
+    // If it's currently playing forward, queue a reverse
+    if (dir === 'forward') {
+      pendingReverse.current.add(clipName);
+      return;
+    }
+
+    // If it's sitting in pressed state, immediately play reverse
+    if (isPressed && !dir) {
+      action.time = Math.max(duration - 1e-6, 0);
+      action.timeScale = -1;
+      action.paused = false;
+      action.play();
+      playing.current.set(clipName, 'reverse');
+    }
+  };
+
   useImperativeHandle(ref, () => ({
     powerOn: ensurePowerOn,
     loadCassette: triggerLoadCassette,
     togglePlay: triggerPlayButton,
     unloadCassette: unloadCassette,
+    resetStereoButton,
+    toggleStereoButton: triggerStereoButton,
+    resetPlayButton,
+    pressPlayButton,
     isPowerOn: isPowerOn, // Expose power state to parent
   }));
 
@@ -920,6 +1098,13 @@ const MayakModel = forwardRef(function MayakModel({ audioAnalyzer, isPlayingAudi
             if (name.includes('btn_PLAY')) { 
               if (onPlayButtonClick) onPlayButtonClick();
               toggleActionForObject(name);
+              return;
+            }
+            if (name.includes('btn_STEREO')) {
+              if (onStereoToggle) onStereoToggle();
+              toggleActionForObject(name);
+              resetPlayButton();
+              resetStereoButton();
               return;
             }
             if (name.includes('btn_POWER')) { toggleActionForObject(name); return; }
@@ -1199,7 +1384,7 @@ export default function App() {
     }
   };
 
-  const handlePlayPauseClick = async () => {
+  const handlePlayPauseClick = async (fromStereo = false) => {
     // Check if power is off or cassette is not loaded
     if (!mayakRef.current?.isPowerOn) {
       console.log('Power is off - cannot play');
@@ -1210,9 +1395,33 @@ export default function App() {
       if (fileInputRef.current) fileInputRef.current.click();
       return;
     }
-    await handlePlayAudio();
+    
+    // If currently playing, pause and unpress the play button
+    if (isPlayingAudio && mayakRef.current) {
+      console.log('Audio is playing, pausing...');
+      await handlePlayAudio(); // This will pause
+      mayakRef.current.resetPlayButton();
+      return;
+    }
+    
+    // Audio is not playing, so start it and press the button
+    console.log('Audio not playing, starting playback and pressing button');
     if (mayakRef.current) {
-      mayakRef.current.togglePlay();
+      mayakRef.current.pressPlayButton();
+      if (!fromStereo) {
+        mayakRef.current.toggleStereoButton();
+      }
+    }
+    await handlePlayAudio();
+  };
+
+  const handleStereoClick = () => {
+    // Stop audio and return buttons to unpressed state
+    handleStopAudio();
+    setIsPlayingAudio(false);
+    if (mayakRef.current) {
+      mayakRef.current.resetPlayButton();
+      mayakRef.current.resetStereoButton();
     }
   };
 
@@ -1251,7 +1460,7 @@ export default function App() {
           shadow-bias={-0.0001}
         />
 
-        <Environment preset="studio" environmentIntensity={ENVIRONMENT_INTENSITY} />
+        <Environment preset="apartment" environmentIntensity={ENVIRONMENT_INTENSITY} />
 
         <Suspense fallback={null}>
         <MayakModel 
@@ -1259,16 +1468,20 @@ export default function App() {
           audioAnalyzer={audioAnalyzerRef.current} 
           isPlayingAudio={isPlayingAudio}
           onSelectSongClick={handleSelectSongClick}
+          onStereoToggle={handleStereoClick}
           volume={volume}
           onPowerChange={handlePowerChange}
           onTapeUnload={handleTapeUnload}
           onCasseteLoaded={handleCasseteLoaded}
           modelScale={modelScale}
           sceneOffsetY={sceneOffsetY}
-          onPlayButtonClick={() => {
+          onPlayButtonClick={async () => {
             if (audioUrl) {
               console.log('Play button clicked, starting audio');
-              handlePlayAudio();
+              await handlePlayAudio();
+              if (mayakRef.current) {
+                mayakRef.current.resetStereoButton();
+              }
             }
           }}
         />
